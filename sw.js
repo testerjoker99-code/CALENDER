@@ -1,32 +1,44 @@
-const CACHE_NAME = 'dada-calendar-shell-v1';
-const SHELL_FILES = ['./index.html', './manifest.json', './icon-192.png', './icon-512.png'];
+const CACHE_NAME = 'dada-calendar-shell-v2';
+const STATIC_FILES = ['manifest.json', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', function(event) {
   event.waitUntil(
     caches.open(CACHE_NAME).then(function(cache) {
-      return cache.addAll(SHELL_FILES);
+      return cache.addAll(STATIC_FILES);
     })
   );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', function(event) {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys().then(function(names) {
+      return Promise.all(
+        names.filter(function(n) { return n !== CACHE_NAME; })
+             .map(function(n) { return caches.delete(n); })
+      );
+    }).then(function() {
+      return self.clients.claim();
+    })
+  );
 });
 
 self.addEventListener('fetch', function(event) {
   const url = event.request.url;
-  const isShellFile = SHELL_FILES.some(function(f) {
-    return url.endsWith(f.replace('./', ''));
-  });
+  const isStatic = STATIC_FILES.some(function(f) { return url.endsWith(f); });
 
-  if (isShellFile) {
+  if (isStatic) {
     event.respondWith(
       caches.match(event.request).then(function(cached) {
         return cached || fetch(event.request);
       })
     );
+    return;
   }
-  // Anything else (the calendar iframe content itself) always goes to the network
-  // so the calendar data is never stale.
+
+  event.respondWith(
+    fetch(event.request).catch(function() {
+      return caches.match(event.request);
+    })
+  );
 });
