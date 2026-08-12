@@ -18,21 +18,46 @@
       display: flex; align-items: center; justify-content: center;
       font-family: -apple-system, Roboto, Arial, sans-serif;
     }
-    .loader { text-align: center; color: #6b6a63; }
-    img { width: 64px; height: 64px; border-radius: 14px; margin-bottom: 14px; }
+    .card { text-align: center; padding: 24px; }
+    img { width: 84px; height: 84px; border-radius: 18px; margin-bottom: 18px; }
+    h1 { font-size: 20px; margin: 0 0 6px; color: #262521; }
+    p { font-size: 14px; color: #6b6a63; margin: 0 0 22px; }
+    button {
+      font-size: 16px; font-weight: 600; color: white;
+      background: #3d5afe; border: none; border-radius: 14px;
+      padding: 14px 32px; cursor: pointer;
+    }
+    button:active { opacity: 0.85; }
   </style>
 </head>
 <body>
-  <div class="loader">
+  <div class="card">
     <img src="icon-192.png" alt="">
-    <div>Opening calendar…</div>
+    <h1>Dada's Calendar</h1>
+    <p id="subtitle">Tap below to open, or install this as an app first.</p>
+    <button onclick="goToCalendar()">Open calendar</button>
   </div>
 
   <script>
+    const CALENDAR_URL = 'https://script.google.com/macros/s/AKfycbwupe8SJtb0d2DYENqPyAsiDBNtMVGAqRF0Ta1s7O1eBeSuLhah0b5GZVij4rxzmqDATA/exec';
+
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js');
     }
-    window.location.replace('https://script.google.com/macros/s/AKfycbwupe8SJtb0d2DYENqPyAsiDBNtMVGAqRF0Ta1s7O1eBeSuLhah0b5GZVij4rxzmqDATA/exec');
+
+    function isStandalone() {
+      return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    }
+
+    function goToCalendar() {
+      window.location.replace(CALENDAR_URL);
+    }
+
+    // Only auto-redirect when already launched as the installed app.
+    // In a normal browser tab, stay put so Chrome can offer "Install app".
+    if (isStandalone()) {
+      goToCalendar();
+    }
   </script>
 </body>
 </html>
